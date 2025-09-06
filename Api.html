@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumir API</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+</head>
+<body>
+    <nav class="navbar bg-body-tertiary">
+        <div class="container-fluid">
+            <form id="form" class="d-flex" role="search">
+                <input id="search" class="form-control me-2" type="search" placeholder="Search" aria-label="Search" />
+                <button class="btn btn-outline-success btn-sm" type="submit">Búscar</button>
+            </form>
+        </div>
+        
+        <div id="productos"></div>
+    </nav>
+
+    <script>
+        //Funciones asincronas, fetch, promesas
+
+        //Usando fetch
+        function getApi(){
+            fetch('https://www.thecocktaildb.com/api/json/v1/1/search.php?s=margarita')
+                //Se va a ejecutar cuando tenga una respuesta
+                .then(response => response.json())
+                .then(data => {
+                    let productosDiv = document.getElementById('productos');
+                    productosDiv.innerHTML = ''; //No contiene nada (limpia el div)
+                    data.drinks.forEach(producto => {
+                        productosDiv.innerHTML += `
+
+                            <div class="row-2">
+                                <div class="card" style="width: 17rem; align-items: center; margin: 15px; margin-left: 30px;">
+                                    <img src="${producto.strDrinkThumb}" class="card-img-top img-fluid" 
+                                        style="max-height: 200px; object-fit: cover;" alt="${producto.strDrink}">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">
+                                            <a href="#" class="text-decoration-none text-dark">
+                                                ${producto.strDrink}
+                                            </a>
+                                        </h5>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        getApi();
+
+        
+        document.getElementById('form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            SendApi();
+        });
+
+        function SendApi(){
+
+            fetch('https://www.thecocktaildb.com/api/json/v1/1/search.php?s='+ document.getElementById("search").value)
+            .then(response => response.json())
+            .then(data =>{
+                let productosDiv = document.getElementById('productos');
+                    productosDiv.innerHTML = ''; //No contiene nada (limpia el div)
+                    if(data.drinks){
+                        data.drinks.forEach(producto => {
+                        productosDiv.innerHTML += `
+                            <div class="row">
+                                <div class="card" style="width: 17rem; align-items: center; margin: 15px; margin-left: 30px;">
+                                    <img src="${producto.strDrinkThumb}" class="card-img-top img-fluid" 
+                                        style="max-height: 200px; object-fit: cover;" alt="${producto.strDrink}">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">
+                                            <a href="#" class="text-decoration-none text-dark">
+                                                ${producto.strDrink}
+                                            </a>
+                                        </h5>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        });
+                    }else{
+                        productosDiv.innerHTML = `<h3 style=" margin: 15px;">No se encontraron resultados</h3>`;
+                    }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
