@@ -19,78 +19,99 @@
         <div id="productos"></div>
     </nav>
 
-    <script>
-        //Funciones asincronas, fetch, promesas
+    <div class="modal fade" id="detalleModal" tabindex="-1" aria-labelledby="detalleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detalleModalLabel"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImg" src="" class="img-fluid mb-3" style="max-height:200px; object-fit:cover;" alt="">
+                    <p id="modalDesc"></p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        //Usando fetch
-        function getApi(){
-            fetch('https://www.thecocktaildb.com/api/json/v1/1/search.php?s=margarita')
-                //Se va a ejecutar cuando tenga una respuesta
-                .then(response => response.json())
-                .then(data => {
-                    let productosDiv = document.getElementById('productos');
-                    productosDiv.innerHTML = ''; //No contiene nada (limpia el div)
-                    data.drinks.forEach(producto => {
-                        productosDiv.innerHTML += `
+<script>
+    let productosGlobal = [];
 
-                            <div class="row-2">
-                                <div class="card" style="width: 17rem; align-items: center; margin: 15px; margin-left: 30px;">
-                                    <img src="${producto.strDrinkThumb}" class="card-img-top img-fluid" 
-                                        style="max-height: 200px; object-fit: cover;" alt="${producto.strDrink}">
-                                    <div class="card-body text-center">
-                                        <h5 class="card-title">
-                                            <a href="#" class="text-decoration-none text-dark">
-                                                ${producto.strDrink}
-                                            </a>
-                                        </h5>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                })
-                .catch(error => console.error('Error:', error));
-        }
+    function mostrarModalPorIndice(indice) {
+        const producto = productosGlobal[indice];
+        const titulo = producto.strDrink;
+        const imagen = producto.strDrinkThumb;
+        const descripcion = producto.strInstructionsES || producto.strInstructions || "Sin descripción disponible";
 
-        getApi();
+        document.getElementById('detalleModalLabel').textContent = titulo;
+        document.getElementById('modalImg').src = imagen;
+        document.getElementById('modalImg').alt = titulo;
+        document.getElementById('modalDesc').textContent = descripcion;
 
-        
-        document.getElementById('form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            SendApi();
-        });
+        const modal = new bootstrap.Modal(document.getElementById('detalleModal'));
+        modal.show();
+    }
 
-        function SendApi(){
-
-            fetch('https://www.thecocktaildb.com/api/json/v1/1/search.php?s='+ document.getElementById("search").value)
+    function getApi(){
+        fetch('https://www.thecocktaildb.com/api/json/v1/1/search.php?s=margarita')
             .then(response => response.json())
-            .then(data =>{
+            .then(data => {
                 let productosDiv = document.getElementById('productos');
-                    productosDiv.innerHTML = ''; //No contiene nada (limpia el div)
-                    if(data.drinks){
-                        data.drinks.forEach(producto => {
-                        productosDiv.innerHTML += `
-                            <div class="row">
-                                <div class="card" style="width: 17rem; align-items: center; margin: 15px; margin-left: 30px;">
-                                    <img src="${producto.strDrinkThumb}" class="card-img-top img-fluid" 
-                                        style="max-height: 200px; object-fit: cover;" alt="${producto.strDrink}">
-                                    <div class="card-body text-center">
-                                        <h5 class="card-title">
-                                            <a href="#" class="text-decoration-none text-dark">
-                                                ${producto.strDrink}
-                                            </a>
-                                        </h5>
-                                    </div>
+                productosDiv.innerHTML = '';
+                productosGlobal = data.drinks || [];
+                productosGlobal.forEach((producto, i) => {
+                    productosDiv.innerHTML += `
+                        <div class="row-2">
+                            <div class="card" style="width: 17rem; align-items: center; margin: 15px; margin-left: 30px;">
+                                <img src="${producto.strDrinkThumb}" class="card-img-top img-fluid" 
+                                    style="max-height: 200px; object-fit: cover;" alt="${producto.strDrink}">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">${producto.strDrink}</h5>
+                                    <button class="btn btn-primary btn-sm mt-2" onclick="mostrarModalPorIndice(${i})">Ver detalle</button>
                                 </div>
                             </div>
-                        `;
-                        });
-                    }else{
-                        productosDiv.innerHTML = `<h3 style=" margin: 15px;">No se encontraron resultados</h3>`;
-                    }
+                        </div>
+                    `;
+                });
             })
             .catch(error => console.error('Error:', error));
-        }
-    </script>
+    }
+
+    getApi();
+
+    document.getElementById('form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        SendApi();
+    });
+
+    function SendApi(){
+        fetch('https://www.thecocktaildb.com/api/json/v1/1/search.php?s='+ document.getElementById("search").value)
+        .then(response => response.json())
+        .then(data =>{
+            let productosDiv = document.getElementById('productos');
+            productosDiv.innerHTML = '';
+            productosGlobal = data.drinks || [];
+            if(productosGlobal.length){
+                productosGlobal.forEach((producto, i) => {
+                    productosDiv.innerHTML += `
+                        <div class="row">
+                            <div class="card" style="width: 17rem; align-items: center; margin: 15px; margin-left: 30px;">
+                                <img src="${producto.strDrinkThumb}" class="card-img-top img-fluid" 
+                                    style="max-height: 200px; object-fit: cover;" alt="${producto.strDrink}">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">${producto.strDrink}</h5>
+                                    <button class="btn btn-primary btn-sm mt-2" onclick="mostrarModalPorIndice(${i})">Ver detalle</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }else{
+                productosDiv.innerHTML = `<h3 style=" margin: 15px;">No se encontraron resultados</h3>`;
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
 </body>
 </html>
